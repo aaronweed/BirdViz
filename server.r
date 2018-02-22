@@ -9,16 +9,15 @@ library(tidyr)
 library(ggvis)
 library(shinyjs)
 library(jsonlite, pos=100)
+library(lubridate)
 
+NCRN<-importNETNbirds("./Data/")
 
-
-NCRN<-importNCRNbirds("./Data/")
 ParkList<-getParkNames(NCRN, name.class="code")
 names(NCRN)<-ParkList
 names(ParkList)<-getParkNames(NCRN, name.class="short")
 
 ParkBounds<-read.csv(file="./Data/boundboxes.csv", as.is=TRUE)
-
 
 
 shinyServer(function(input,output,session){
@@ -64,8 +63,8 @@ shinyServer(function(input,output,session){
   
   output$BirdMap<-renderLeaflet({
     leaflet() %>%
-      setView(lng=-77.8,lat=39.03,zoom=9) %>% 
-      setMaxBounds(lng1=-79.5,lng2=-76.1, lat1=37.7, lat2=40.36)
+      #setView(lng=-72.4,lat=38.5,zoom=7, options = list()) %>% 
+      setMaxBounds(lng1=-76.38,lng2=-66.95, lat1=40.5, lat2=44.5)
   })
   
 
@@ -202,10 +201,7 @@ observe({
     req(circleData()$Values)
     switch(input$MapValues,
       richness= colorNumeric(palette=c("cyan","magenta4","orangered3"),domain=circleData()$Values),
-      individual=colorFactor(palette=c("cyan","magenta4","orangered3","yellow"), domain=0:8),
-      bci=colorFactor(palette=
-                      c("cyan","magenta4","orangered3","yellow"), 
-                        domain=c("Low Integrity","Medium Integrity","High Integrity","Highest Integrity"))
+      individual=, bci=  colorFactor(palette=c("cyan","magenta4","orangered3","yellow"), domain=0:8)
     )
   })  
 
@@ -292,7 +288,7 @@ observe({
                 paste(ShapeClick$id,"<br/>"),
                 paste(circleData()[circleData()$Point_Name==ShapeClick$id,]$Values,"detected", collapse=" ")),
                 
-            bci=paste(sep="<br/>", ShapeClick$id, paste0('BCI Value: ',circleData()[circleData()$Point_Name==ShapeClick$id,]$BCI),
+            bci=paste(sep="<br/>", ShapeClick$id, paste0('BCI Value: ',circleData()[circleData()$Point_Name==ShapeClick$id,]$ CI),
                       paste('BCI Category: ', circleData()[circleData()$Point_Name==ShapeClick$id,]$Values) )
             )
         ),
@@ -308,8 +304,8 @@ observe({
 
 
   withProgress(message="Loading ...  Please Wait",value=1,{
-    Ecoregion<-readOGR(dsn="./Maps/Ecoregion.geojson",encoding="OGRGeoJSON")
-    Forested<-readOGR(dsn="./Maps/Forests.geojson",encoding="OGRGeoJSON")
+    Ecoregion<-readOGR(dsn="./Maps/Ecoregion.geojson")
+    Forested<-readOGR(dsn="./Maps/Forests.geojson")
   })
  
   observe({
@@ -736,8 +732,8 @@ observe({
                band=if(input$PlotBand=="All") NA else seq(as.numeric(input$PlotBand)), 
                AOU=input$PlotSpecies) %>% 
     { if (input$ParkPlot=="All") . else filter(.,Admin_Unit_Code==input$ParkPlot)} %>% 
-        mutate(Year=factor(Year,labels=paste(paste(c(2007:2017), paste0("(",
-                          sapply(X=2007:2017,Y=PlotParkUse(),FUN=function(X,Y){nrow(getPoints(Y,years=X))}),")"))))) %>% 
+        mutate(Year=factor(Year,labels=paste(paste(c(2007:2016), paste0("(",
+                          sapply(X=2007:2016,Y=PlotParkUse(),FUN=function(X,Y){nrow(getPoints(Y,years=X))}),")"))))) %>% 
     group_by(Year) %>% 
 
     summarize("Visit 1"=round(mean(Visit1, na.rm=T),digits=2), "Visit 2"= round( mean(Visit2, na.rm=T),digits=2)) %>% 
@@ -749,19 +745,19 @@ observe({
       
   RichnessPlotData<-reactive({
     if(!is.null(input$ParkPlot)){
-    tbl_df(data.frame(Year=2007:2017)) %>% 
+    tbl_df(data.frame(Year=2007:2016)) %>% 
     group_by(Year) %>% 
     mutate(Species=birdRichness(object=PlotParkUse(), years=Year,
                           band=if(input$PlotBand=="All") NA else seq(as.numeric(input$PlotBand))) ) %>% 
     ungroup() %>% 
-    mutate(Year=factor(Year,labels=paste(paste(c(2007:2017), paste0("(",
-          sapply(X=2007:2017,Y=PlotParkUse(),FUN=function(X,Y){nrow(getPoints(Y,years=X))}),")"))))) 
+    mutate(Year=factor(Year,labels=paste(paste(c(2007:2016), paste0("(",
+          sapply(X=2007:2016,Y=PlotParkUse(),FUN=function(X,Y){nrow(getPoints(Y,years=X))}),")"))))) 
     }
   })  
   
   BCIPlotData<-reactive({
     withProgress(message="Calculating...  Please Wait",value=1,{
-        tbl_df(data.frame(Year=2007:2017)) %>% 
+        tbl_df(data.frame(Year=2007:2016)) %>% 
         group_by(Year) %>% 
         mutate(BCI=BCI(object=PlotParkUse(), years=Year,
               band=if(input$PlotBand=="All") NA else seq(as.numeric(input$PlotBand)))[["BCI"]] %>% mean(na.rm=T) %>% 
@@ -770,8 +766,8 @@ observe({
              vec=c(0,40.1,52.1,60.1,77.1))]
         ) %>% 
         ungroup() %>% 
-        mutate(Year=factor(Year,labels=paste(paste(c(2007:2017), paste0("(",
-            sapply(X=2007:2017,Y=PlotParkUse(),FUN=function(X,Y){nrow(getPoints(Y,years=X))}),")")))))
+        mutate(Year=factor(Year,labels=paste(paste(c(2007:2016), paste0("(",
+            sapply(X=2007:2016,Y=PlotParkUse(),FUN=function(X,Y){nrow(getPoints(Y,years=X))}),")")))))
     })
   })
 

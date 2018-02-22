@@ -3,7 +3,7 @@ library(leaflet)
 library(ggvis)
 library(shinyjs)
 
-navbarPage(title=HTML("<div> <a href='https://science.nature.nps.gov/im/units/ncrn/'> <img src='ah_small_black.gif',
+navbarPage(title=HTML("<div> <a href='https://science.nature.nps.gov/im/units/ncrnn/'> <img src='ah_small_black.gif',
                       alt='Forest Bird Visualizer'> </a> Forest Bird Visualizer</div>"),
            position = "static-top",inverse=TRUE, collapsible = FALSE, fluid=TRUE, windowTitle = "NCRN Birds",
            theme="https://www.nps.gov/lib/bootstrap/3.3.2/css/nps-bootstrap.min.css", id="MainNavBar",
@@ -33,12 +33,12 @@ navbarPage(title=HTML("<div> <a href='https://science.nature.nps.gov/im/units/nc
 
       tags$div(title="Choose the type of data you wish to see",
         selectizeInput(inputId="MapValues", label="Data to Map", choices=c("Individual Species"="individual",
-                                      "Number of Species"="richness", "Bird Community Index (BCI)"="bci"))
+                                      "Number of Species"="richness", "Bird Community Index (BCI)"="bci"), selected = "richness")
       ),
     
       tags$div(title="Include birds at what distance from the observer?",
         selectizeInput(inputId="MapBand", label="Distance from Observer:",
-         choices=c("0-50 meters"=1,"0-100 meters"=2,"Any distance"="All"))
+         choices=c("0-50 meters"=1,"0-100 meters"=2,"Any distance"="All"), selected = "All")
       ),
       
       div(id="SpeciesControls",
@@ -49,12 +49,15 @@ navbarPage(title=HTML("<div> <a href='https://science.nature.nps.gov/im/units/nc
       ),
       
       tags$div(title="Choose which year's data to display",
-               sliderInput(inputId="MapYear", label="Year:", min=2007,max=2017,value=2017, sep="",step=1, ticks=T)),
+               sliderInput(inputId="MapYear", label="Year:", min=2007,max=2016,value=2016, sep="",step=1, ticks=T)),
       hr(),
-      tags$div(title="Use common name, Latin name, or American Ornithological Union code",
-        radioButtons(inputId="MapNames",label="Names:", choices=c("Common"="common","Latin"="Latin","AOU"="AOU"), inline=TRUE)),
+      
+      conditionalPanel(condition = "input.MapValues == 'individual'", tags$div(title="Use common name, Latin name, or American Ornithological Union code",
+        radioButtons(inputId="MapNames",label="Names:", choices=c("Common"="common","Latin"="Latin","AOU"="AOU"), inline=TRUE))),
+      
       hr(),
       h4("eBird Data",class="panel-heading", id="EBirdTitle"),
+      
       tags$div(title="Display citizen science from ebird (non-NPS data)",
         checkboxInput(inputId="MapEBird", label="Show recent eBird Data?")),
       
@@ -128,10 +131,10 @@ navbarPage(title=HTML("<div> <a href='https://science.nature.nps.gov/im/units/nc
                  selectizeInput(inputId="TableSpecies",choices=NULL,label="Species")), #updated in server.r
       
         tags$div(title="Select a year.",
-                 sliderInput(inputId="TableYear", label="Year:", min=2007,max=2017,value=2017, sep="",step=1, ticks=T)),
+                 sliderInput(inputId="TableYear", label="Year:", min=2007,max=2016,value=2016, sep="",step=1, ticks=T)),
         
-        tags$div(title="Select a range of one or more years.",
-                 sliderInput(inputId="TableYear2", label="Year:", min=2007,max=2017,value=c(2007,2017), sep="",step=1, ticks=T)),
+        tags$div(title="Select a range of oen or more years.",
+                 sliderInput(inputId="TableYear2", label="Year:", min=2007,max=2016,value=c(2007,2016), sep="",step=1, ticks=T)),
         
       
         tags$div(title="Include birds at what distance from the observer?",
