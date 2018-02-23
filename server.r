@@ -63,7 +63,7 @@ shinyServer(function(input,output,session){
   
   output$BirdMap<-renderLeaflet({
     leaflet() %>%
-      #setView(lng=-72.4,lat=38.5,zoom=7, options = list()) %>% 
+      #setView(lng=-72.4,lat=38.5,zoom=7, options = list()) %>%
       setMaxBounds(lng1=-76.38,lng2=-66.95, lat1=40.5, lat2=44.5)
   })
   
